@@ -1,0 +1,257 @@
+openapi: 3.1.0
+info:
+  title: Agent Finder Registry API
+  version: 0.4.2
+  description: |
+    Universal federated discovery API specification for AI agents, tools, and capabilities.
+    Allows LLM orchestrators to semantically search registries for relevant capabilities
+    and enables registry-to-registry federated query routing.
+paths:
+  /search:
+    post:
+      summary: Semantic Search Registry
+      description: |
+        Query a registry with natural language to find matching capabilities.
+        Accepts semantic query parameters and structural filters. Supports multi-hop federation.
+      operationId: searchAgents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Successful search operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '429':
+          $ref: '#/components/responses/429TooManyRequests'
+        '500':
+          $ref: '#/components/responses/500InternalError'
+
+  /agents:
+    get:
+      summary: Browse Catalog Entries
+      description: |
+        Deterministic, highly cacheable listing endpoint designed for developer portals.
+        Relies on strict EBNF database filtering instead of natural language search.
+      operationId: listAgents
+      parameters:
+        - name: filter
+          in: query
+          required: false
+          description: EBNF-like filter expression (e.g., "type = 'application/mcp-server+json' AND createdAfter > '2026-01-01'")
+          schema:
+            type: string
+        - name: orderBy
+          in: query
+          required: false
+          description: Field and sorting direction (e.g., "displayName", "updatedAt DESC")
+          schema:
+            type: string
+        - name: pageSize
+          in: query
+          required: false
+          description: Maximum number of entries to return.
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: pageToken
+          in: query
+          required: false
+          description: Token for pagination.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful deterministic list operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResponse'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '429':
+          $ref: '#/components/responses/429TooManyRequests'
+        '500':
+          $ref: '#/components/responses/500InternalError'
+
+components:
+  schemas:
+    SearchRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: object
+          required:
+            - text
+          properties:
+            text:
+              type: string
+              description: The natural language query describing the required capability.
+              example: "find me a weather lookup tool with support for radar maps"
+            type:
+              type: string
+              description: Optional media type filter (e.g. application/mcp-server+json).
+              example: "application/mcp-server+json"
+            compliance:
+              type: string
+              description: Optional trust attestation standard constraint.
+              example: "hipaa"
+            publisher:
+              type: string
+              description: Optional publisher organizational domain filter.
+              example: "acme.com"
+            federation:
+              type: string
+              enum: [auto, referrals, none]
+              default: auto
+              description: |
+                Control the federation topology:
+                * 'auto': Registry queries upstreams on behalf of the client and merges results.
+                * 'referrals': Registry returns local matches and references upstream endpoints.
+                * 'none': Registry only searches local index.
+          additionalProperties: false
+        pageSize:
+          type: integer
+          default: 10
+          description: Maximum number of search results to return.
+        pageToken:
+          type: string
+          description: Pagination token.
+      additionalProperties: false
+
+    SearchResponse:
+      type: object
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResultItem'
+        referrals:
+          type: array
+          description: List of upstream registries recommended to the client. Only returned in 'referrals' federation mode.
+          items:
+            $ref: '#/components/schemas/RegistryReferral'
+        pageToken:
+          type: string
+          description: Token for paging subsequent results.
+      additionalProperties: false
+
+    SearchResultItem:
+      allOf:
+        - $ref: './ai-catalog.schema.json#/$defs/catalogEntry'
+      type: object
+      required:
+        - score
+        - source
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Semantic relevance rating (0 to 100) computed by the registry. Note: This is not a security or trust score.
+          example: 95
+        source:
+          type: string
+          format: uri
+          description: The URL endpoint of the registry where this entry was indexed.
+          example: "https://registry.acme.com/api/v1/"
+
+    RegistryReferral:
+      type: object
+      required:
+        - identifier
+        - displayName
+        - type
+        - url
+      properties:
+        identifier:
+          type: string
+          description: Logical identifier of the referred registry.
+          example: "urn:ai:nlweb.ai:registry:public"
+        displayName:
+          type: string
+          description: Name of the referred registry.
+          example: "Public Agent Finder"
+        type:
+          type: string
+          enum: [application/ai-registry, application/ai-registry+json]
+          description: Registry media type identifier.
+        url:
+          type: string
+          format: uri
+          description: Endpoint URL for the referred registry's search route.
+          example: "https://finder.nlweb.ai/search"
+
+    ListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: './ai-catalog.schema.json#/$defs/catalogEntry'
+        total:
+          type: integer
+          description: Total count of matching entries in the registry.
+        pageToken:
+          type: string
+          description: Token for paginating subsequent results.
+
+  responses:
+    400BadRequest:
+      description: Malformed request payload or invalid query syntax.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    401Unauthorized:
+      description: Credentials missing, expired, or rejected.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    429TooManyRequests:
+      description: Request rate limit has been exceeded.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    500InternalError:
+      description: An unexpected internal server error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - errorCode
+        - message
+      properties:
+        errorCode:
+          type: string
+          description: Standard uppercase error classification code.
+          example: "INVALID_ARGUMENT"
+        message:
+          type: string
+          description: Human-readable description explaining the error.
+          example: "The filter expression syntax 'type = MCP' is invalid. Did you mean 'type = application/mcp-server+json'?"

@@ -598,3 +598,39 @@ Restricting the discovery identifier to this specific URN format, rather than al
 4. **Search and Discovery Ergonomics (The @ Resolution Pattern)**: Users and LLMs require intuitive, semantic handles for capabilities (e.g., Assistant@Acme). The structured hierarchy of urn:ai:\<publisher\>:\<namespace\>:\<agent-name\> allows search engines and federated registries to parse components deterministically. Registries can easily match natural language queries to the publisher domain (Acme) and the terminal short name (Assistant), enabling high-performance semantic filtering, aggregation, and conflict resolution (e.g., displaying Assistant with a verified Acme shield).  
 5. **Cross-Network Uniqueness and Federation Scalability**: Domain-anchored URNs guarantee global uniqueness across disparate federated registries without requiring centralized registration databases. Because domain names are already globally unique via the DNS root, anchoring the URN to a domain eliminates collision risks when merging catalogs from multiple upstream registries in auto or referrals federation modes.
 
+---
+
+## Appendix D: Formal Schema Definitions
+
+To support automated validation, testing, and machine-readable compliance checking, this specification defines formal schemas for both the catalog metadata manifests and the Registry REST API. 
+
+The schema specifications use industry-standard formats optimized for validation and integration tooling:
+
+### D.1 The `ai-catalog.json` Manifest Schema (JSON Schema)
+
+The capability manifest hosted at `/.well-known/ai-catalog.json` and individual catalog entry payloads are formally defined using the **JSON Schema (Draft 2020-12)** standard. 
+
+* **Authoritative Schema File**: [`spec/schemas/ai-catalog.schema.json`](file:///Users/jbu/Development/agentfinder/spec/schemas/ai-catalog.schema.json)
+* **Key Features**:
+  * Mandates strict URN pattern validation for `identifier` complying with the domain-anchored `urn:ai` format.
+  * Enforces the strict **Value-or-Reference** pattern requiring exactly one of `url` or `data` to be provided.
+  * Integrates detailed structure checks for the progressive `trustManifest` envelope, including attestations and signature fields.
+
+To validate a local manifest file against the schema using standard Python or Node validation CLI tools:
+```bash
+# Example validation using ajv-cli (Node)
+npx ajv-cli validate -s spec/schemas/ai-catalog.schema.json -d path/to/your/ai-catalog.json
+```
+
+### D.2 The Registry REST API Specification (OpenAPI)
+
+The HTTP REST query interfaces (`POST /search` and `GET /agents`) exposed by compliant Agent Registries are formally defined using the **OpenAPI 3.1.0 Specification** in YAML format.
+
+* **Authoritative Specification File**: [`spec/schemas/openapi.yaml`](file:///Users/jbu/Development/agentfinder/spec/schemas/openapi.yaml)
+* **Key Features**:
+  * Defines paths, request/response structures, query filters, and standard error code mappings.
+  * Integrates references to the `ai-catalog.schema.json` JSON Schema files directly to reuse catalog entry payload validators for search query results and browsing lists.
+  * Models registry-to-registry query routing parameter envelopes (such as the `federation` query parameter enum and `referrals` array payloads).
+
+This YAML specification can be imported directly into API routers, API gateways, mock servers, or client SDK generator engines (like OpenAPI Generator).
+
