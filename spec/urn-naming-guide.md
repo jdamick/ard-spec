@@ -38,10 +38,10 @@ The specification provides clear, flexible pathways for developers to construct 
 ### Scenario A: Purely Local / Private Development
 If you are building and testing an agent that will **only run locally** and will never be published to a shared or public discovery registry, you can use a **placeholder FQDN** to satisfy syntax validators:
 
-* **Recommended Placeholders**:
-  * `urn:ai:local.dev:<namespace>:<agent-name>`
-  * `urn:ai:local.internal:<namespace>:<agent-name>`
-  * `urn:ai:example.com:<namespace>:<agent-name>`
+* **Recommended Placeholders** (Using RFC 2606 reserved testing domains):
+  * `urn:ai:example.com:<namespace>:<agent-name>` (Reserved domain for documentation)
+  * `urn:ai:agent.test:<namespace>:<agent-name>` (Reserved TLD for testing)
+  * `urn:ai:agent.localhost:<namespace>:<agent-name>` (Reserved TLD mapping natively to loopback)
 
 #### Example Manifest (`ai-catalog.json`):
 ```json
@@ -52,7 +52,7 @@ If you are building and testing an agent that will **only run locally** and will
   },
   "entries": [
     {
-      "identifier": "urn:ai:local.dev:weather:telemetry",
+      "identifier": "urn:ai:agent.test:weather:telemetry",
       "displayName": "Local Weather Node",
       "type": "application/mcp-server+json",
       "url": "http://localhost:8080/mcp",
@@ -151,4 +151,4 @@ This ensures that the URN remains completely identical between their local devel
 | :--- | :--- | :--- | :--- | :--- |
 | **Enterprise Production** | Fully verified corporate domain | `urn:ai:aws.amazon.com:finance:trader` | `https://api.aws.amazon.com/agents/trader` | Fully supported (SPIFFE/mTLS/DID) |
 | **Solo Developer (Public)** | Registered user namespace / free subdomain | `urn:ai:gitlab.com:johndoe:weather-tool` | `https://gitlab.com/johndoe/weather-tool` | Basic signatures / web DID |
-| **Local / Private Dev** | Non-resolvable placeholder domain | `urn:ai:local.dev:testing:analyzer` | `http://localhost:8080/analyzer` | None (Syntax verification only) |
+| **Local / Private Dev** | Non-resolvable placeholder domain | `urn:ai:agent.test:testing:analyzer` | `http://localhost:8080/analyzer` | None (Syntax verification only) |
