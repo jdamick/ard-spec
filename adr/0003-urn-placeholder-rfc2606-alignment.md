@@ -20,16 +20,26 @@ However:
 ## Decision
 We aligned all local-development placeholder recommendations in `spec/urn-naming-guide.md` with strictly compliant **RFC 2606** reserved names:
 
-1. **`example.com`** (RFC 2606 §3): The standard reserved domain for documentation and examples.
+1. **`example.com`** (RFC 2606 §3): The standard reserved domain for documentation and static examples.
    * *Compliant URN*: `urn:ai:example.com:<namespace>:<agent-name>`
-2. **`.test`** (RFC 2606 §2): A reserved TLD guaranteed to never be registered in the public global DNS root, specifically reserved for testing and local sandbox namespaces.
-   * *Compliant URN*: `urn:ai:agent.test:<namespace>:<agent-name>`
-3. **`.localhost`** (RFC 2606 §2): A reserved TLD guaranteed to map natively to the loopback address, making it ideal for local development namespaces.
+2. **`.localhost`** (RFC 2606 §2): A reserved TLD guaranteed to map natively to the loopback address. 
    * *Compliant URN*: `urn:ai:agent.localhost:<namespace>:<agent-name>`
+   * *Role*: The primary placeholder for **human developer local sandboxes** (Scenario A & B), ensuring instant local-only resolution without editing `/etc/hosts`.
+3. **`.test`** (RFC 2606 §2): A reserved TLD specifically intended for testing namespaces.
+   * *Compliant URN*: `urn:ai:agent.test:<namespace>:<agent-name>`
+   * *Role*: Reserved strictly for **automated testing suites, CI/CD pipelines, and conformance verification test runs** (like our `conformance-test` suite), where the environment needs to simulate mock external nodes and federated routing without triggering loopback behavior.
 
-We updated all local manifest examples and scenario descriptions to use `urn:ai:agent.test:...` and `urn:ai:example.com:...` exclusively.
+## Local Workload Verification vs. Syntax-Only Validation
+
+This placeholder architecture establishes a clear security boundary based on the development lifecycle phase:
+
+* **Syntax-Only Validation (Scenario A & B — Default)**: For standard local development, there is **no active cryptographic identity verification** happening. The placeholder domains (`*.localhost`, `example.com`) are enforced strictly to satisfy standard syntax validation rules and maintain architectural consistency with production files.
+* **Workload Verification (Scenario C — Advanced Enterprise)**: If an enterprise developer is testing their production zero-trust security mesh (like SPIFFE/SPIRE or mTLS) inside a local Kubernetes/Istio cluster on their laptop, they use their **real domain** (e.g., `acme.com`) as the URN publisher. This allows their local zero-trust mesh to actively validate their test certificates against the URN namespace before pushing to production.
+
+This two-tier approach keeps local testing extremely lightweight and zero-friction, while providing a seamless path for heavy-duty enterprise security integration.
 
 ## Consequences
 * **DNS Safety**: Guarantees that local test manifests will never conflict with live public DNS hosts or real domain ownership.
 * **Compliance**: Fully complies with IETF DNS standards (RFC 2606), paving a smooth path for formal standards-track review under the IETF/AAIF.
 * **Uniformity**: Simplifies local conformance validation checking (which can now statically white-list these RFC 2606 roots).
+* **Operational Separation**: Establishes a clean boundary between human developer loopbacks (`.localhost`), automated testing/CI/CD environments (`.test`), and verified production bindings (real domains).
