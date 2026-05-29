@@ -1,7 +1,7 @@
 # ADR-0005: Registry Shared Query Model and POST /explore Endpoint
 
 ## Status
-Accepted
+Accepted (Implemented in v0.5.0)
 
 ## Context
 Based on the feedback from huggingface and others, the Working Group recognized the need for "Registry Introspection" to allow autonomous clients to explore registry statistics, facet allocations, and capability distribution seamlessly.

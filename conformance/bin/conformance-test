@@ -212,22 +212,28 @@ class ConformanceTester:
         # 2. Test POST /search (Mandatory Discovery Endpoint)
         search_url = f"{base_url}/search"
         print(f"\n  {COLOR_BOLD}Probing POST /search (Mandated Discovery endpoint)...{COLOR_RESET}")
+ "        # 2. Test POST /search (Mandatory Discovery Endpoint)
+        search_url = f\"{base_url}/search\"
+        print(f\"\n  {COLOR_BOLD}Probing POST /search (Mandated Discovery endpoint)...{COLOR_RESET}\")
         
-        mock_query = {
-            "query": {
-                "text": "weather forecast tools",
-                "federation": "none"
+        mock_search_query = {
+            \"query\": {
+                \"text\": \"weather forecast tools\",
+                \"filter\": {
+                    \"type\": [\"application/mcp-server+json\"]
+                }
             },
-            "pageSize": 2
+            \"federation\": \"none\",
+            \"pageSize\": 2
         }
         
         try:
-            req_data = json.dumps(mock_query).encode('utf-8')
+            req_data = json.dumps(mock_search_query).encode('utf-8')
             req = urllib.request.Request(
                 search_url, 
                 data=req_data, 
-                headers={"Content-Type": "application/json"}, 
-                method="POST"
+                headers={\"Content-Type\": \"application/json\"}, 
+                method=\"POST\"
             )
             
             with urllib.request.urlopen(req, timeout=5) as response:
@@ -235,49 +241,102 @@ class ConformanceTester:
                 data = json.loads(body)
                 
                 if response.status == 200:
-                    print_success("POST /search responded successfully with 200 OK.")
+                    print_success(\"POST /search responded successfully with 200 OK.\")
                     
-                    # Validate OpenAPI properties
-                    results = data.get("results")
+                    results = data.get(\"results\")
                     if results is None:
-                        self.add_error("POST /search response is missing required 'results' array.")
+                        self.add_error(\"POST /search response is missing required 'results' array.\")
                     elif not isinstance(results, list):
-                        self.add_error("POST /search response 'results' is not a JSON array.")
+                        self.add_error(\"POST /search response 'results' is not a JSON array.\")
                     else:
-                        print_success(f"POST /search returned valid results list ({len(results)} items).")
+                        print_success(f\"POST /search returned valid results list ({len(results)} items).\")
                         
-                        # Check each search result item
                         for idx, item in enumerate(results):
-                            label = f"Result #{idx}"
+                            label = f\"Result #{idx}\"
                             
-                            # Check SearchResultItem specific fields
-                            score = item.get("score")
+                            score = item.get(\"score\")
                             if score is None:
-                                self.add_error(f"[{label}] Missing required SearchResultItem field 'score'.")
+                                self.add_error(f\"[{label}] Missing required SearchResultItem field 'score'.\")
                             elif not isinstance(score, int) or score < 0 or score > 100:
-                                self.add_error(f"[{label}] 'score' must be an integer between 0 and 100. Got {score}.")
+                                self.add_error(f\"[{label}] 'score' must be an integer between 0 and 100. Got {score}.\")
                                 
-                            source = item.get("source")
+                            source = item.get(\"source\")
                             if not source:
-                                self.add_error(f"[{label}] Missing required SearchResultItem field 'source'.")
+                                self.add_error(f\"[{label}] Missing required SearchResultItem field 'source'.\")
                                 
-                            # Check nested catalogEntry fields
-                            ident = item.get("identifier")
+                            ident = item.get(\"identifier\")
                             if not ident:
-                                self.add_error(f"[{label}] Nested catalog entry is missing 'identifier'.")
+                                self.add_error(f\"[{label}] Nested catalog entry is missing 'identifier'.\")
                             
-                            disp_name = item.get("displayName")
+                            disp_name = item.get(\"displayName\")
                             if not disp_name:
-                                self.add_error(f"[{label}] Nested catalog entry is missing 'displayName'.")
+                                self.add_error(f\"[{label}] Nested catalog entry is missing 'displayName'.\")
                                 
-                            mtype = item.get("type")
+                            mtype = item.get(\"type\")
                             if not mtype:
-                                self.add_error(f"[{label}] Nested catalog entry is missing 'type'.")
+                                self.add_error(f\"[{label}] Nested catalog entry is missing 'type'.\")
                                 
-                            if "url" not in item and "data" not in item:
-                                self.add_error(f"[{label}] Nested catalog entry must contain either 'url' or 'data'.")
+                            if \"url\" not in item and \"data\" not in item:
+                                self.add_error(f\"[{label}] Nested catalog entry must contain either 'url' or 'data'.\")
                 else:
-                    self.add_error(f"POST /search returned unexpected HTTP status: {response.status}")
+                    self.add_error(f\"POST /search returned unexpected HTTP status: {response.status}\")
+        except urllib.error.HTTPError as e:
+            self.add_error(f\"POST /search request failed: {e.code} {e.reason}\")
+        except Exception as e:
+            self.add_error(f\"Failed to execute search probe: {e}\")
+
+        # 3. Test POST /explore (Optional Introspection Endpoint)
+        explore_url = f\"{base_url}/explore\"
+        print(f\"\n  {COLOR_BOLD}Probing POST /explore (Optional Introspection endpoint)...{COLOR_RESET}\")
+        
+        mock_explore_query = {
+            \"query\": {
+                \"text\": \"weather\"
+            },
+            \"resultType\": {
+                \"facets\": [
+                    { \"field\": \"type\" }
+                ]
+            }
+        }
+        
+        try:
+            req_data = json.dumps(mock_explore_query).encode('utf-8')
+            req = urllib.request.Request(
+                explore_url, 
+                data=req_data, 
+                headers={\"Content-Type\": \"application/json\"}, 
+                method=\"POST\"
+            )
+            
+            with urllib.request.urlopen(req, timeout=5) as response:
+                body = response.read().decode('utf-8')
+                data = json.loads(body)
+                
+                if response.status == 200:
+                    print_success(\"POST /explore responded successfully with 200 OK.\")
+                    
+                    rtype = data.get(\"resultType\")
+                    if rtype != \"facets\":
+                        self.add_error(f\"POST /explore response 'resultType' expected 'facets', got '{rtype}'.\")
+                        
+                    facets = data.get(\"facets\")
+                    if facets is None:
+                        self.add_error(\"POST /explore response is missing required 'facets' block.\")
+                    elif not isinstance(facets, dict):
+                        self.add_error(\"POST /explore response 'facets' is not a JSON object.\")
+                    else:
+                        print_success(\"POST /explore returned valid facets object.\")
+                        
+                else:
+                    self.add_error(f\"POST /explore returned unexpected HTTP status: {response.status}\")
+        except urllib.error.HTTPError as e:
+            if e.code in [404, 501]:
+                print_warning(f\"POST /explore responded with {e.code} (Not Implemented/Not Found). This endpoint is optional and this is compliant behavior.\")
+            else:
+                self.add_error(f\"POST /explore returned server error: {e.code} {e.reason}\")
+        except Exception as e:
+            self.add_error(f\"Failed to execute explore probe: {e}\")"tatus}")
         except urllib.error.HTTPError as e:
             self.add_error(f"POST /search request failed: {e.code} {e.reason}")
             try:
@@ -288,12 +347,25 @@ class ConformanceTester:
                 pass
         except Exception as e:
             self.add_error(f"Failed to execute search probe: {e}")
+                        self.add_error("POST /explore response 'facets' is not a JSON object.")
+                    else:
+                        print_success("POST /explore returned valid facets object.")
+                        
+                else:
+                    self.add_error(f"POST /explore returned unexpected HTTP status: {response.status}")
+        except urllib.error.HTTPError as e:
+            if e.code in [404, 501]:
+                print_warning(f"POST /explore responded with {e.code} (Not Implemented/Not Found). This endpoint is optional and this is compliant behavior.")
+            else:
+                self.add_error(f"POST /explore returned server error: {e.code} {e.reason}")
+        except Exception as e:
+            self.add_error(f"Failed to execute explore probe: {e}")
 
         return len(self.errors) == 0
 
 def main():
     if len(sys.argv) < 3:
-        print(f"{COLOR_BOLD}Agent Finder Conformance CLI v0.4.2{COLOR_RESET}")
+        print(f"{COLOR_BOLD}Agent Finder Conformance CLI v0.5.0{COLOR_RESET}")
         print("Usage:")
         print("  conformance-test manifest <local_file_path_or_url>")
         print("  conformance-test registry <registry_base_url>")

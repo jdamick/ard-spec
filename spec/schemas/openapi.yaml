@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
   title: Agent Finder Registry API
-  version: 0.4.2
+  version: 0.5.0
   description: |
     Universal federated discovery API specification for AI agents, tools, and capabilities.
-    Allows LLM orchestrators to semantically search registries for relevant capabilities
+    Allows LLM orchestrators to semantically search and discover registries for relevant capabilities
     and enables registry-to-registry federated query routing.
 paths:
   /search:
@@ -12,7 +12,7 @@ paths:
       summary: Semantic Search Registry
       description: |
         Query a registry with natural language to find matching capabilities.
-        Accepts semantic query parameters and structural filters. Supports multi-hop federation.
+        Accepts a shared semantic and structural query object. Supports multi-hop federation.
       operationId: searchAgents
       requestBody:
         required: true
@@ -33,6 +33,41 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '429':
           $ref: '#/components/responses/429TooManyRequests'
+        '500':
+          $ref: '#/components/responses/500InternalError'
+
+  /explore:
+    post:
+      summary: Dynamic Registry Introspection
+      description: |
+        Aggregates statistical facets and bucketing over the matched search space. 
+        Returns counts instead of ranked catalog entries. 
+      operationId: exploreRegistry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExploreRequest'
+      responses:
+        '200':
+          description: Successful explore operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExploreResponse'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '429':
+          $ref: '#/components/responses/429TooManyRequests'
+        '501':
+          description: Dynamic registry exploration is not implemented by this server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           $ref: '#/components/responses/500InternalError'
 
@@ -88,42 +123,40 @@ paths:
 
 components:
   schemas:
+    QueryModel:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: Natural language description narrows the set by semantic relevance.
+          example: "find me a weather lookup tool"
+        filter:
+          type: object
+          description: |
+            Structured constraints. Keys are field paths (can be dot-separated for nested fields). 
+            Values are arrays or scalar values.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            type: ["application/mcp-server+json"]
+            "trustManifest.attestations.type": ["SOC2-Type2"]
+      additionalProperties: false
+
     SearchRequest:
       type: object
       required:
         - query
       properties:
         query:
-          type: object
-          required:
-            - text
-          properties:
-            text:
-              type: string
-              description: The natural language query describing the required capability.
-              example: "find me a weather lookup tool with support for radar maps"
-            type:
-              type: string
-              description: Optional media type filter (e.g. application/mcp-server+json).
-              example: "application/mcp-server+json"
-            compliance:
-              type: string
-              description: Optional trust attestation standard constraint.
-              example: "hipaa"
-            publisher:
-              type: string
-              description: Optional publisher organizational domain filter.
-              example: "acme.com"
-            federation:
-              type: string
-              enum: [auto, referrals, none]
-              default: auto
-              description: |
-                Control the federation topology:
-                * 'auto': Registry queries upstreams on behalf of the client and merges results.
-                * 'referrals': Registry returns local matches and references upstream endpoints.
-                * 'none': Registry only searches local index.
-          additionalProperties: false
+          $ref: '#/components/schemas/QueryModel'
+        federation:
+          type: string
+          enum: [auto, referrals, none]
+          default: auto
         pageSize:
           type: integer
           default: 10
@@ -131,6 +164,81 @@ components:
         pageToken:
           type: string
           description: Pagination token.
+      additionalProperties: false
+
+    ExploreRequest:
+      type: object
+      required:
+        - resultType
+      properties:
+        query:
+          $ref: '#/components/schemas/QueryModel'
+        resultType:
+          type: object
+          required:
+            - facets
+          properties:
+            facets:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExploreFacetRequest'
+      additionalProperties: false
+
+    ExploreFacetRequest:
+      type: object
+      required:
+        - field
+      properties:
+        field:
+          type: string
+          description: Dot-separated path of the catalogEntry property to aggregate.
+          example: "type"
+        limit:
+          type: integer
+          default: 20
+        minCount:
+          type: integer
+          default: 1
+      additionalProperties: false
+
+    ExploreResponse:
+      type: object
+      required:
+        - resultType
+        - facets
+      properties:
+        resultType:
+          type: string
+          enum: [facets]
+        facets:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ExploreFacetResult'
+      additionalProperties: false
+
+    ExploreFacetResult:
+      type: object
+      required:
+        - buckets
+      properties:
+        buckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExploreFacetBucket'
+        otherCount:
+          type: integer
+      additionalProperties: false
+
+    ExploreFacetBucket:
+      type: object
+      required:
+        - value
+        - count
+      properties:
+        value:
+          type: string
+        count:
+          type: integer
       additionalProperties: false
 
     SearchResponse:
@@ -214,33 +322,6 @@ components:
           type: string
           description: Token for paginating subsequent results.
 
-  responses:
-    400BadRequest:
-      description: Malformed request payload or invalid query syntax.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    401Unauthorized:
-      description: Credentials missing, expired, or rejected.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    429TooManyRequests:
-      description: Request rate limit has been exceeded.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    500InternalError:
-      description: An unexpected internal server error occurred.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-
-  schemas:
     Error:
       type: object
       required:
@@ -255,3 +336,29 @@ components:
           type: string
           description: Human-readable description explaining the error.
           example: "The filter expression syntax 'type = MCP' is invalid. Did you mean 'type = application/mcp-server+json'?"
+
+  responses:
+    400BadRequest:
+      description: Malformed request payload or invalid syntax.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    401Unauthorized:
+      description: Credentials missing or rejected.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    429TooManyRequests:
+      description: Rate limit exceeded.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    500InternalError:
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

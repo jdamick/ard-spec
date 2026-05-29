@@ -611,12 +611,12 @@ This gives the client full control over the federation topology without requirin
 
 **Request:**
 
-```
+```json
 {
   "query": {
-    "text": "find me a flight booking agent",
-    "federation": "referrals"
-  }
+    "text": "find me a flight booking agent"
+  },
+  "federation": "referrals"
 }
 ```
 
