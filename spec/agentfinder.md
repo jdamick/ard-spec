@@ -732,7 +732,7 @@ npx ajv-cli validate -s spec/schemas/ai-catalog.schema.json -d path/to/ai-catalo
 
 The HTTP query interfaces (`POST /search` and `GET /agents`) exposed by compliant Agent Registries are formally defined using the **OpenAPI 3.1.0 Specification** in YAML.
 
-* **Authoritative Specification File**: [`spec/schemas/openapi.yaml`](schemas/openapi.yaml)
+* **Authoritative Specification File**: [`spec/schemas/agentfinder.openapi.yaml`](schemas/agentfinder.openapi.yaml)
 * **Key Integration Benefits**:
   * Integrates paths, queries, status responses, and paging logic directly.
   * References the JSON Schema `ai-catalog.schema.json` schema files to ensure search and list return types are statically bound to the specification's schema constraints.
