@@ -1,10 +1,10 @@
-# Agent Finder
+# Agentic Resource Discovery
 
 > **Federated Discovery and Search for AI Agents and Capabilities**
 
-Agent Finder is a standardized, domain-anchored discovery specification designed to catalog, search, and discover AI capabilities (including Model Context Protocol (MCP) servers, Agent-to-Agent (A2A) agent cards, skills, and other callable services) across federated networks. It is built on top of the foundational [ai-catalog](https://github.com/Agent-Card/ai-catalog) specification to ensure global federation and strict interoperability.
+ARD is a standardized, domain-anchored discovery specification designed to catalog, search, and discover AI capabilities (including Model Context Protocol (MCP) servers, Agent-to-Agent (A2A) agent cards, skills, and other callable services) across federated networks. It is built on top of the foundational [ai-catalog](https://github.com/Agent-Card/ai-catalog) specification to ensure global federation and strict interoperability.
 
-This repository contains the formal specification and related documentation for **Agent Finder**.
+This repository contains the formal specification and related documentation for **Agentic Resource Discovery (ARD)**.
 
 ---
 
@@ -25,7 +25,7 @@ This repository contains the formal specification and related documentation for 
 
 As the ecosystem of AI capabilities scales to thousands or millions of individual agents and tools, explicitly hardcoding or pre-installing each capability becomes untenable. 
 
-**Agent Finder** introduces a **Search-First Discovery** paradigm where LLMs and orchestrators dynamically discover and select agents via dedicated search services. This approach moves the discovery and filtering burden outside the LLM's context window, leveraging information retrieval techniques and rich semantic signals without consuming valuable tokens.
+**Agentic Resource Discovery (ARD)** introduces a **Search-First Discovery** paradigm where LLMs and orchestrators dynamically discover and select agents via dedicated search services. This approach moves the discovery and filtering burden outside the LLM's context window, leveraging information retrieval techniques and rich semantic signals without consuming valuable tokens.
 
 ---
 
@@ -62,7 +62,7 @@ urn:ai:<publisher>:<namespace>:<agent-name>
 
 ## 🛡️ Identity, Trust & Compliance
 
-Agent Finder supports a robust, optional `trustManifest` object that sits alongside discovery records. This consolidates:
+ARD supports a robust, optional `trustManifest` object that sits alongside discovery records. This consolidates:
 * **Cryptographic Workload Identity**: decoupled from discovery ID (e.g., SPIFFE ID or DID) matching the domain anchor of the publisher.
 * **Attestations**: Verifiable compliance credentials (e.g., SOC2-Type2, HIPAA-Audit, GDPR).
 * **Provenance**: Relationship tracking (`derivedFrom`, `publishedFrom`) and digests for integrity.
@@ -105,12 +105,12 @@ Registries support three client-controlled federation models:
 
 ## 📂 Repository Structure
 
-* [**`spec/ard.md`**](spec/ard.md): The core Agent Finder discovery and federation specification document.
+* [**`spec/ard.md`**](spec/ard.md): The core ARD discovery and federation specification document.
 * [**`spec/trust-model-conceptual-guide.md`**](spec/trust-model-conceptual-guide.md): Conceptual guide explaining trustManifest dimensions, identity decoupling, and domain alignment.
 * [**`spec/cryptographic-identity-verification.md`**](spec/cryptographic-identity-verification.md): Technical implementation guide for static and dynamic cryptographic trust verification.
 * [**`spec/urn-naming-guide.md`**](spec/urn-naming-guide.md): Best practices and naming conventions for domain-anchored URN namespaces.
 * [**`adr/`**](adr/): Architectural Decision Records (ADRs) documenting key design, protocol, and validation decisions.
-* [**`conformance/`**](conformance/): The official Agent Finder conformance testing suite. Contains CLI validators, mock catalog manifests, mock registry REST API servers, and automated end-to-end demo tools.
+* [**`conformance/`**](conformance/): The official ARD conformance testing suite. Contains CLI validators, mock catalog manifests, mock registry REST API servers, and automated end-to-end demo tools.
 
 ---
 
@@ -124,7 +124,7 @@ Registries support three client-controlled federation models:
 
 ## 🤝 Ecosystem Alignment & Acknowledgments
 
-Agent Finder is directly based on and extends the [ai-catalog](https://github.com/Agent-Card/ai-catalog) specification. The ai-catalog standard provides the base artifact-agnostic data model, progressive trust layer, and validation rules. Agent Finder builds upon these standards to define dynamic registry search APIs (`POST /search`), federated query routing mechanisms, and domain-anchored naming schemes to enable dynamic runtime capability discovery.
+ARD is directly based on and extends the [ai-catalog](https://github.com/Agent-Card/ai-catalog) specification. The ai-catalog standard provides the base artifact-agnostic data model, progressive trust layer, and validation rules. ARD builds upon these standards to define dynamic registry search APIs (`POST /search`), federated query routing mechanisms, and domain-anchored naming schemes to enable dynamic runtime capability discovery.
 
 ---
 

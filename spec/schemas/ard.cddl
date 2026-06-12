@@ -1,4 +1,4 @@
-; CDDL Specification for Agent Finder (ai-catalog & Registry schemas)
+; CDDL Specification for Agentic Resource Discovery (ai-catalog & Registry schemas)
 ; Compliant with IETF RFC 8610 (Concise Data Definition Language)
 
 start = ai-catalog-manifest

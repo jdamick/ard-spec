@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Agent Finder Registry API
+  title: Agentic Resource Discovery Registry API
   version: 0.5.0
   description: |
     Universal federated discovery API specification for AI agents, tools, and capabilities.

@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-In v0.4.2 of the Agent Finder specification, the `POST /search` API allows clients to execute semantic natural language queries against the registry. As the federated registry index scales to thousands or millions of entries, queries can match a very large subset of capabilities.
+In v0.4.2 of the Agentic Resource Discovery specification, the `POST /search` API allows clients to execute semantic natural language queries against the registry. As the federated registry index scales to thousands or millions of entries, queries can match a very large subset of capabilities.
 
 We identified that:
 1. Returning an unbounded list of search matches on a single request is a severe performance risk, causing network latency, high serialization overhead, and client-side memory crashes.

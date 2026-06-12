@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Agent Finder End-to-End Conformance Demo Runner
+# Agentic Resource Discovery End-to-End Conformance Demo Runner
 # Validates mock manifests, starts the mock registry API, and runs active probes.
 
 # Set strict shell settings
@@ -16,7 +16,7 @@ RESET="\033[0m"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$(dirname "$DIR")")"
 
-echo -e "${BOLD}${CYAN}=== Starting Agent Finder Conformance Verification Demo ===${RESET}"
+echo -e "${BOLD}${CYAN}=== Starting Agentic Resource Discovery Conformance Verification Demo ===${RESET}"
 
 # 1. Verify manifest file
 echo -e "\n${BOLD}[Step 1/3] Validating mock manifest file...${RESET}"
@@ -60,5 +60,5 @@ else
 fi
 
 echo -e "\n${BOLD}${GREEN}=== ALL CONFORMANCE CHECKS PASSED SUCCESSFUL ===${RESET}"
-echo -e "Agent Finder implementation is fully compliant."
+echo -e "Agentic Resource Discovery implementation is fully compliant."
 exit 0

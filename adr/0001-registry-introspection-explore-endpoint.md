@@ -4,7 +4,7 @@
 Superseded by [ADR-0005](0005-registry-shared-query-model.md)
 
 ## Context
-In v0.4 of the Agent Finder specification, we identified the need for "Registry Introspection"—allowing LLM orchestrators and clients to query a registry's capabilities (such as supported media types, protocols, and federation styles) before executing deep searches. Concurrently, our reference implementations proved the immense utility of "Registry Telemetry" (exposing aggregate statistics like total agent counts, protocol breakdowns, and category distributions) to support developer portals and directory dashboards.
+In v0.4 of the Agentic Resource Discovery specification, we identified the need for "Registry Introspection"—allowing LLM orchestrators and clients to query a registry's capabilities (such as supported media types, protocols, and federation styles) before executing deep searches. Concurrently, our reference implementations proved the immense utility of "Registry Telemetry" (exposing aggregate statistics like total agent counts, protocol breakdowns, and category distributions) to support developer portals and directory dashboards.
 
 We considered two approaches:
 1. **Option A (Static GET Endpoint)**: A simple, high-performance `GET /stats` or `GET /info` endpoint returning global counts and supported media types.

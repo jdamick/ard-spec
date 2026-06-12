@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-During the design of the `POST /search` API in v0.4.2 of the Agent Finder specification, we debated whether to support a generic EBNF-style Boolean filter string (`filter`) and custom sort orders (`orderBy`) inside semantic search requests—similar to the deterministic `/agents` browsing endpoint.
+During the design of the `POST /search` API in v0.4.2 of the Agentic Resource Discovery specification, we debated whether to support a generic EBNF-style Boolean filter string (`filter`) and custom sort orders (`orderBy`) inside semantic search requests—similar to the deterministic `/agents` browsing endpoint.
 
 The core architectural problem was:
 1. **Relevance Score Integrity**: In semantic natural language search, the primary sorting vector is the dynamics-based relevance score (`score` 0-100). Sorting by metadata fields (e.g., `displayName` or `created_at DESC`) conflicts with and destroys relevance-based ranking, returning newer or alphabetical records that do not satisfy the semantic query intent.

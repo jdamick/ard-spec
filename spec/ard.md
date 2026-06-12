@@ -1,42 +1,49 @@
-# Agent Finder Specification
+# Agentic Resource Discovery Specification
 
-**Federated Discovery and Search for Agents**
+**Federated Discovery and Search for Agentic Resources**
 
 **Version**: v0.5 (Draft)  
 **Status**: Proposal  
 **Date**: May 28, 2026
 
+**Authors**:
+
+- Junjie Bu — Google
+- Scott Courtney — GoDaddy
+- R.V.Guha — Microsoft
+- Shaun Smith — Hugging Face
+
 ## 1\. Overview
 
-LLMs increasingly rely on external capabilities — MCP tools, A2A agents, skills, and other callable services — to extend their functionality. In this document, we refer to these generically as agents or capabilities.
+LLMs increasingly rely on external capabilities — MCP tools, A2A agents, skills, and other callable services — to extend their functionality. In this document, we refer to these generically as agentic resources.
 
-**Agent Finder** is a specification that defines how AI artifacts are cataloged, discovered, and searched across federated networks.
+The **Agentic Resource Discovery Specification (ARD)** defines how AI artifacts are cataloged, discovered, and searched across federated networks.
 
-This version (v0.4.2) aligns the discovery framework with the broader ai-catalog standard, shifting towards a media-type-driven approach and mandating standard web protocols (REST) for discovery interfaces to ensure maximum interoperability.
+This version (v0.5) aligns the discovery framework with the broader ai-catalog standard, shifting towards a media-type-driven approach and mandating standard web protocols (REST) for discovery interfaces to ensure maximum interoperability.
 
 ## 2\. Motivation
 
 The prevailing model requires users or developers to explicitly “install” or hardcode each agent before use. As the ecosystem scales to thousands or millions of agents, we need a model where LLMs can discover and invoke agents dynamically, similar to how search engines discover web pages.
 
-Agent descriptions tend to be generic, and most LLMs currently select tools by including all descriptions in the context window — which does not scale. Agent Finder addresses this by moving discovery outside the LLM into a dedicated search service, where richer signals (representative queries, publisher identity, compliance metadata, usage patterns) can be leveraged without consuming context window tokens.
+Agent descriptions tend to be generic, and most LLMs currently select tools by including all descriptions in the context window — which does not scale. ARD addresses this by moving discovery outside the LLM into a dedicated search service, where richer signals (representative queries, publisher identity, compliance metadata, usage patterns) can be leveraged without consuming context window tokens.
 
 ## 3\. Core Design Principles
 
-The Agent Finder protocol is guided by the following core design principles to ensure scalability, interoperability, and ease of adoption:
+ARD is guided by the following core design principles to ensure scalability, interoperability, and ease of adoption:
 
 ### 3.1 Search-First Discovery
 
-Rather than requiring users or systems to pre-install agents (analogous to the mobile app store paradigm), Agent Finder promotes a model where agents are discovered dynamically through search. Registries maintain a shared, continuously updated index, making capabilities discoverable the moment they are published.
+Rather than requiring users or systems to pre-install agents (analogous to the mobile app store paradigm), ARD promotes a model where agents are discovered dynamically through search. Registries maintain a shared, continuously updated index, making capabilities discoverable the moment they are published.
 
 ### 3.2 Scalability Beyond Context Windows
 
-Traditional tool selection relies on injecting all descriptions into the LLM's context window, which does not scale. Agent Finder moves the selection problem outside the LLM into a dedicated search service, leveraging information retrieval techniques to scale to thousands or millions of capabilities without consuming context window tokens.
+Traditional tool selection relies on injecting all descriptions into the LLM's context window, which does not scale. ARD moves the selection problem outside the LLM into a dedicated search service, leveraging information retrieval techniques to scale to thousands or millions of capabilities without consuming context window tokens.
 
 ### 3.3 Artifact Agnostic Envelope
 
 The specification does not define or constrain the internal schema of specific agent types (MCP, A2A, etc.). Instead, it acts as a clean envelope that uses IANA Media Types to identify what an artifact is, delegating the definition of artifact-specific metadata to the respective protocol specifications.
 
-\[\!NOTE\] **IANA Registration Status**: The media types application/a2a-agent-card+json and application/mcp-server-card+json used in this specification are de-facto community standards tracking towards formal registration. Implementers should note that while well-known path directories (like /.well-known/agent-card.json) are officially registered permanent entries, full media type registrations are pending working group joint submission. Omission of strict verification by intermediaries is recommended during this transition.
+\[\!NOTE\] **IANA Registration Status**: The media types application/a2a-agent-card+json and application/mcp-server+json used in this specification are de-facto community standards tracking towards formal registration. Implementers should note that while well-known path directories (like /.well-known/agent-card.json) are officially registered permanent entries, full media type registrations are pending working group joint submission. Omission of strict verification by intermediaries is recommended during this transition.
 
 ### 3.4 Strict Value-or-Reference
 
@@ -86,7 +93,7 @@ A manifest file hosted at /.well-known/ai-catalog.json lists the available artif
     {
       "identifier": "urn:ai:acme.com:server:weather",
       "displayName": "Weather Data Node",
-      "type": "application/mcp-server-card+json",
+      "type": "application/mcp-server+json",
       "url": "https://api.acme.com/mcp/weather.json",
       "capabilities": ["WeatherTool", "ForecastTool"],
       "description": "Enterprise weather MCP server for live telemetry.",
@@ -160,7 +167,7 @@ Each object in the entries array MUST contain:
 
 | Field | Type | Description |
 | :---- | :---- | :---- |
-| identifier | String | Globally unique logical identifier for discovery. MUST use a domain-anchored URN namespace format (urn:ai:\<publisher\>:\<namespace\>:\<agent-name\>) where \<publisher\> is a verifiable domain name. This guarantees cross-network uniqueness, nomenclature stability, and decentralized trust binding. See [§4.2.1](https://file+.vscode-resource.vscode-cdn.net/Users/jbu/Development/ai-card/specification/agent-finder.md#421-agent-identifier-identifier-format-and-rationale) for detailed format specifications and architectural rationale. |
+| identifier | String | Globally unique logical identifier for discovery. MUST use a domain-anchored URN namespace format (urn:ai:\<publisher\>:\<namespace\>:\<agent-name\>) where \<publisher\> is a verifiable domain name. This guarantees cross-network uniqueness, nomenclature stability, and decentralized trust binding. See [§4.2.1](#421-agent-identifier-identifier-format-and-rationale) for detailed format specifications and architectural rationale. |
 | displayName | String | Human-readable name. |
 | type | String | Type of the AI artifact. |
 
@@ -230,7 +237,7 @@ An agent hosted on Hugging Face Spaces (MCP), published in a manifest:
     {
       "identifier": "urn:ai:hf.co:alice-dev:weather-agent",
       "displayName": "Weather Agent",
-      "type": "application/mcp-server-card+json",
+      "type": "application/mcp-server+json",
       "inline": {
         "name": "Weather Agent",
         "description": "Simple weather lookup using open data",
@@ -279,7 +286,7 @@ Discovery via GitHub Pages (combining the above):
     {
       "identifier": "urn:ai:hf.co:alice-dev:weather-agent",
       "displayName": "Weather Agent",
-      "type": "application/mcp-server-card+json",
+      "type": "application/mcp-server+json",
       "url": "https://alice-dev.github.io/weather-agent/entry.json"
     },
     {
@@ -399,10 +406,10 @@ Publishers advertise their capability manifests via the following mechanisms:
 
 Agent Registry instances populate their indexes through ingestion pipelines:
 
-* **Web Ingestion (Required)**: Crawling ai-catalog.json files from discovered URIs. All Agent Finder implementations MUST support this.  
+* **Web Ingestion (Required)**: Crawling ai-catalog.json files from discovered URIs. All ARD implementations MUST support this.  
 * **Additional Pipelines (Optional)**: Registries may support scanning git repositories, npm registries, or OCI registries as indicated by their configuration.
 
-## 7\. The Agent Finder API
+## 7\. The ARD API
 
 An Agent Registry **MUST** expose a standard HTTP REST search interface to guarantee universal federation. The operational base URL for these endpoints is discovered dynamically by identifying catalog entries within the static ai-catalog.json manifest that carry the application/ai-registry+json media type, as defined in §4.1.
 
@@ -483,7 +490,7 @@ The response returns standard catalog entries with additional relevance scores, 
     {
       "identifier": "urn:ai:example.com:weather-server",
       "displayName": "Global Weather Service",
-      "type": "application/mcp-server-card+json",
+      "type": "application/mcp-server+json",
       "url": "https://weather.example.com/mcp",
       "capabilities": ["WeatherTool"],
       "score": 88,
@@ -558,7 +565,7 @@ Each element of `resultType.facets`:
   "facets": {
     "type": {
       "buckets": [
-        { "value": "application/mcp-server-card+json", "count": 1247 },
+        { "value": "application/mcp-server+json", "count": 1247 },
         { "value": "application/a2a-agent-card+json", "count": 389 }
       ],
       "otherCount": 23
@@ -771,5 +778,3 @@ To instantly run a complete end-to-end verification suite utilizing a pre-bundle
 ./conformance/bin/run-conformance-demo
 ```
 This script performs manifest schema validation, launches a mock registry server in the background, executes live search and listing queries against it using the conformance tester, and gracefully terminates the server when finished.
-
-

@@ -1,8 +1,8 @@
-# Agent Finder Conformance Testing Tool
+# Agentic Resource Discovery Conformance Testing Tool
 
 > **Automated compliance checking CLI to validate capability manifests and Registry REST API implementations.**
 
-This directory contains the official, zero-dependency **Conformance Testing CLI Tool** designed to verify that catalogs and discovery registries conform strictly to the **Agent Finder** and **ai-catalog** specifications.
+This directory contains the official, zero-dependency **Conformance Testing CLI Tool** designed to verify that catalogs and discovery registries conform strictly to the **Agentic Resource Discovery** and **ai-catalog** specifications.
 
 ---
 
@@ -96,7 +96,7 @@ When checking a live Agent Registry server, the tool executes the following prob
 
 The tool outputs standard exit codes, making it ideal for integration into **CI/CD pipelines**, automated git hooks, or test rigs:
 
-* **`0`**: **PASS**. The manifest or registry conforms perfectly to the Agent Finder specifications without errors.
+* **`0`**: **PASS**. The manifest or registry conforms perfectly to the Agentic Resource Discovery specifications without errors.
 * **`1`**: **FAIL**. The target violates one or more specification constraints. Details of the violations are printed in red to `stderr`.
 
 ---

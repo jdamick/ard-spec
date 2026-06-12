@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-The Agent Finder Naming Guide (`spec/urn-naming-guide.md`) and schema configurations enforce a domain-anchored URN namespace format:
+The Agentic Resource Discovery Naming Guide (`spec/urn-naming-guide.md`) and schema configurations enforce a domain-anchored URN namespace format:
 `urn:ai:<publisher>:<namespace>:<agent-name>`
 
 In the initial versions of the specification, the validation pattern for this URN format was defined as:

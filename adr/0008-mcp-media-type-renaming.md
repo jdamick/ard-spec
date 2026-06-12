@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-In the Agent Finder and `ai-catalog` specifications, standard IANA Media Types are used inside the `type` field of a catalog entry to identify the structure and protocol of the capability being described (e.g., `application/a2a-agent-card+json` for A2A agents).
+In the Agentic Resource Discovery and `ai-catalog` specifications, standard IANA Media Types are used inside the `type` field of a catalog entry to identify the structure and protocol of the capability being described (e.g., `application/a2a-agent-card+json` for A2A agents).
 
 Previously, the media type representing Model Context Protocol (MCP) capabilities was defined as:
 `application/mcp-server+json`
@@ -15,7 +15,7 @@ During standardization reviews, we identified a conceptual mismatch in this nami
 3. **IANA Scope Clarification**: Using `application/mcp-server+json` could cause confusion during formal IANA registration, as reviewers might assume the media type governs the active operational stream protocol rather than the discovery card metadata.
 
 ## Decision
-We decided to rename the standard MCP discovery media type across the entire Agent Finder and `ai-catalog` specifications to:
+We decided to rename the standard MCP discovery media type across the entire Agentic Resource Discovery and `ai-catalog` specifications to:
 
 ```text
 application/mcp-server-card+json

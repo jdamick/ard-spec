@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-The Agent Finder Naming Guide (`spec/urn-naming-guide.md`) mandates that discovery identifiers use a domain-anchored URN namespace format:
+The Agentic Resource Discovery Naming Guide (`spec/urn-naming-guide.md`) mandates that discovery identifiers use a domain-anchored URN namespace format:
 `urn:ai:<publisher>:<namespace>:<agent-name>`
 
 To support local development and private sandboxes, developers require placeholder publisher values when they do not own a registered FQDN or cloud namespace. 

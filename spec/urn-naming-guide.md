@@ -1,6 +1,6 @@
 # URN Naming and Publisher Guide
 
-This guide provides architectural best practices and implementation guidance for structuring Uniform Resource Names (URNs) under the Agent Finder specification, focusing on local development, solo developers, and trust verification.
+This guide provides architectural best practices and implementation guidance for structuring Uniform Resource Names (URNs) under the Agentic Resource Discovery specification, focusing on local development, solo developers, and trust verification.
 
 ---
 
@@ -25,7 +25,7 @@ When running and testing agents locally, developers may be tempted to structure 
 
 Using `'localhost'` as the URN publisher is not allowed for the following reasons:
 
-1. **Decentralized Trust and Verification**: Under the Agent Finder identity model, the `<publisher>` segment of a URN must be a Fully Qualified Domain Name (FQDN). Registries and orchestrators extract this domain (e.g., `acme.com`) and cross-reference it against cryptographic attestations (like SPIFFE SVIDs or DIDs) within the `trustManifest` to verify authority. Since `localhost` is not a publicly resolvable, cryptographically verifiable domain, it breaks the decentralized trust model.
+1. **Decentralized Trust and Verification**: Under the Agentic Resource Discovery identity model, the `<publisher>` segment of a URN must be a Fully Qualified Domain Name (FQDN). Registries and orchestrators extract this domain (e.g., `acme.com`) and cross-reference it against cryptographic attestations (like SPIFFE SVIDs or DIDs) within the `trustManifest` to verify authority. Since `localhost` is not a publicly resolvable, cryptographically verifiable domain, it breaks the decentralized trust model.
 2. **Namespace Collisions**: In a federated registry system, namespaces must be globally unique to avoid collisions. If multiple developers register their local agents using the `localhost` publisher, naming conflicts will occur as soon as those catalogs are merged or indexed.
 3. **Nomenclature Instability**: The fact that an agent is currently running on localhost is a transient deployment detail. The URN represents the permanent contract; physical endpoint addresses belong in the operational transport configurations.
 

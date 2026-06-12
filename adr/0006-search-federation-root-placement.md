@@ -4,7 +4,7 @@
 Accepted (Implemented in v0.5.0)
 
 ## Context
-In the v0.4 design profile of the Agent Finder specification, the search `federation` control parameter (`auto`, `referrals`, `none`) was placed inside the nested `query` object of the `POST /search` request payload.
+In the v0.4 design profile of the Agentic Resource Discovery specification, the search `federation` control parameter (`auto`, `referrals`, `none`) was placed inside the nested `query` object of the `POST /search` request payload.
 
 As the Working Group expanded the standard in v0.5.0 to formally introduce the dynamic `/explore` endpoint—adopting a unified Shared Query Model—we re-evaluated the architectural placement and lifecycle scope of the federation parameter.
 
