@@ -164,7 +164,7 @@ Each object in the entries array MUST contain:
 
 | Field | Type | Description |
 | :---- | :---- | :---- |
-| identifier | String | Globally unique logical identifier for discovery. MUST use a domain-anchored URN namespace format (urn:ai:\<publisher\>:\<namespace\>:\<agent-name\>) where \<publisher\> is a verifiable domain name. This guarantees cross-network uniqueness, nomenclature stability, and decentralized trust binding. See [§4.2.1](#421-agent-identifier-identifier-format-and-rationale) for detailed format specifications and architectural rationale. |
+| identifier | String | Globally unique logical identifier for discovery. MUST use a domain-anchored URN namespace format (`urn:ai:<publisher>:<namespace>:<agent-name>`) where <publisher> is a verifiable domain name. This guarantees cross-network uniqueness, nomenclature stability, and decentralized trust binding. See [§4.2.1](#421-agent-identifier-identifier-format-and-rationale) for detailed format specifications and architectural rationale. |
 | displayName | String | Human-readable name. |
 | type | String | Type of the AI artifact. |
 
@@ -200,9 +200,9 @@ urn:ai:<publisher>:<namespace>:<agent-name>
 
 * **urn**: Mandatory prefix indicating a Uniform Resource Name.  
 * **ai**: The Namespace Identifier (NID), designating the AI artifact and agent discovery ecosystem.  
-* **\<publisher\>**: The Namespace Specific String (NSS) root. MUST be a fully qualified domain name (FQDN) representing the publisher or host organization (e.g., acme.com, github.com). This domain acts as the organizational trust anchor and MUST be verifiable against the cryptographic workload identity in the trustManifest.  
-* **\<namespace\>**: Optional hierarchical segments separated by : (e.g., finance:trading, weather:telemetry). Allows publishers to categorize capabilities by department, team, or product line without altering infrastructure routing.  
-* **\<agent-name\>**: Mandatory terminal segment representing the specific, logical short name of the agent or tool (e.g., assistant, pptx-creator).
+* **<publisher>**: The Namespace Specific String (NSS) root. MUST be a fully qualified domain name (FQDN) representing the publisher or host organization (e.g., acme.com, github.com). This domain acts as the organizational trust anchor and MUST be verifiable against the cryptographic workload identity in the trustManifest.  
+* **<namespace>**: Optional hierarchical segments separated by : (e.g., finance:trading, weather:telemetry). Allows publishers to categorize capabilities by department, team, or product line without altering infrastructure routing.  
+* **<agent-name>**: Mandatory terminal segment representing the specific, logical short name of the agent or tool (e.g., assistant, pptx-creator).
 
 #### Please see more details at [Architectural Rationale for URN Restriction](#appendix-c:-agent-naming-urn-format)
 
