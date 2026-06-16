@@ -40,9 +40,9 @@ Traditional tool selection relies on injecting all descriptions into the LLM's c
 
 ### 3.3 Artifact Agnostic Envelope
 
-The specification does not define or constrain the internal schema of specific agent types (MCP, A2A, etc.). Instead, it acts as a clean envelope that uses IANA Media Types to identify what an artifact is, delegating the definition of artifact-specific metadata to the respective protocol specifications.
+The specification does not define or constrain the internal schema of specific agent types (MCP, A2A, etc.). Instead, it acts as a clean envelope that uses a `type` field (formatted as an IANA Media Type) to identify what an artifact is, delegating the definition of artifact-specific metadata to the respective protocol specifications.
 
-\[\!NOTE\] **IANA Registration Status**: The media types application/a2a-agent-card+json and application/mcp-server+json used in this specification are de-facto community standards tracking towards formal registration. Implementers should note that while well-known path directories (like /.well-known/agent-card.json) are officially registered permanent entries, full media type registrations are pending working group joint submission. Omission of strict verification by intermediaries is recommended during this transition.
+\[\!NOTE\] **IANA Registration Status**: The types application/a2a-agent-card+json and application/mcp-server+json used in this specification are de-facto community standards tracking towards formal registration. Implementers should note that while well-known path directories (like /.well-known/agent-card.json) are officially registered permanent entries, full type registrations are pending working group joint submission and the format may change. In the meantime, omit strict verification of these types by intermediaries.
 
 ### 3.4 Strict Value-or-Reference
 
@@ -138,13 +138,11 @@ A manifest file hosted at /.well-known/ai-catalog.json lists the available artif
         "attestations": [
           {
             "type": "SPIFFE-X509",
-            "uri": "https://acme.com/.well-known/spiffe/jwks",
-            "mediaType": "application/json"
+            "uri": "https://acme.com/.well-known/spiffe/jwks"
           },
           {
             "type": "SOC2-Type2",
-            "uri": "https://trust.acme.com/reports/soc2.pdf",
-            "mediaType": "application/pdf"
+            "uri": "https://trust.acme.com/reports/soc2.pdf"
           }
         ]
       }
@@ -322,18 +320,15 @@ Using trustManifest for compliance, published in a manifest.
         "attestations": [
           {
             "type": "SPIFFE-X509",
-            "uri": "https://acme.com/.well-known/spiffe/jwks",
-            "mediaType": "application/json"
+            "uri": "https://acme.com/.well-known/spiffe/jwks"
           },
           {
             "type": "SOC2-Type2",
-            "uri": "https://trust.acme.com/reports/soc2.pdf",
-            "mediaType": "application/pdf"
+            "uri": "https://trust.acme.com/reports/soc2.pdf"
           },
           {
             "type": "GDPR",
-            "uri": "https://trust.acme.com/compliance/gdpr",
-            "mediaType": "text/html"
+            "uri": "https://trust.acme.com/compliance/gdpr"
           }
         ]
       }
@@ -370,7 +365,6 @@ Provides verifiable proof of a claim (e.g., compliance certifications).
 | :---- | :---- | :---- |
 | type | String | **Required**. Attestation type (e.g., "SOC2-Type2", "HIPAA-Audit"). |
 | uri | String | **Required**. Location of the attestation document. |
-| mediaType | String | **Required**. Format of the document (e.g., "application/pdf"). |
 | digest | String | Optional. Cryptographic hash for integrity verification. |
 
 ### 5.3 Provenance Link Object
@@ -650,7 +644,7 @@ This gives the client full control over the federation topology without requirin
     {
       "identifier": "urn:ai:example.com:registry:travel",
       "displayName": "Travel Agent Finder",
-      "mediaType": "application/ai-registry",
+      "type": "application/ai-registry",
       "url": "https://travel.finder.example/search"
     }
   ]
