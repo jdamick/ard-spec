@@ -638,13 +638,13 @@ This gives the client full control over the federation topology without requirin
     {
       "identifier": "urn:air:nlweb.ai:registry:public",
       "displayName": "Public Agent Finder",
-      "type": "application/ai-registry+json",
+      "type": "application/ai-registry",
       "url": "https://finder.nlweb.ai/search"
     },
     {
       "identifier": "urn:air:example.com:registry:travel",
       "displayName": "Travel Agent Finder",
-      "type": "application/ai-registry+json",
+      "type": "application/ai-registry",
       "url": "https://travel.finder.example/search"
     }
   ]
