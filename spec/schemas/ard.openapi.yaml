@@ -136,9 +136,11 @@ components:
             Structured constraints. Keys are field paths (can be dot-separated for nested fields). 
             Values are arrays or scalar values.
           additionalProperties:
-            type: array
-            items:
-              type: string
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
           example:
             type: ["application/mcp-server-card+json"]
             "trustManifest.attestations.type": ["SOC2-Type2"]
