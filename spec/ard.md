@@ -42,7 +42,7 @@ Traditional tool selection relies on injecting all descriptions into the LLM's c
 
 The specification does not define or constrain the internal schema of specific agent types (MCP, A2A, etc.). Instead, it acts as a clean envelope that uses a `type` field (formatted as an IANA Media Type) to identify what an artifact is, delegating the definition of artifact-specific metadata to the respective protocol specifications.
 
-\[\!NOTE\] **IANA Registration Status**: The types application/a2a-agent-card+json and application/mcp-server+json used in this specification are de-facto community standards tracking towards formal registration. Implementers should note that while well-known path directories (like /.well-known/agent-card.json) are officially registered permanent entries, full type registrations are pending working group joint submission and the format may change. In the meantime, omit strict verification of these types by intermediaries.
+\[\!NOTE\] **IANA Registration Status**: The types application/a2a-agent-card+json and application/mcp-server-card+json used in this specification are de-facto community standards tracking towards formal registration. Implementers should note that while well-known path directories (like /.well-known/agent-card.json) are officially registered permanent entries, full type registrations are pending working group joint submission and the format may change. In the meantime, omit strict verification of these types by intermediaries.
 
 ### 3.4 Strict Value-or-Reference
 
@@ -92,7 +92,7 @@ A manifest file hosted at /.well-known/ai-catalog.json lists the available artif
     {
       "identifier": "urn:air:acme.com:server:weather",
       "displayName": "Weather Data Node",
-      "type": "application/mcp-server+json",
+      "type": "application/mcp-server-card+json",
       "url": "https://api.acme.com/mcp/weather.json",
       "capabilities": ["WeatherTool", "ForecastTool"],
       "description": "Enterprise weather MCP server for live telemetry.",
@@ -234,8 +234,8 @@ An agent hosted on Hugging Face Spaces (MCP), published in a manifest:
     {
       "identifier": "urn:air:hf.co:alice-dev:weather-agent",
       "displayName": "Weather Agent",
-      "type": "application/mcp-server+json",
-      "inline": {
+      "type": "application/mcp-server-card+json",
+      "data": {
         "name": "Weather Agent",
         "description": "Simple weather lookup using open data",
         "tools": [
@@ -283,7 +283,7 @@ Discovery via GitHub Pages (combining the above):
     {
       "identifier": "urn:air:hf.co:alice-dev:weather-agent",
       "displayName": "Weather Agent",
-      "type": "application/mcp-server+json",
+      "type": "application/mcp-server-card+json",
       "url": "https://alice-dev.github.io/weather-agent/entry.json"
     },
     {
@@ -483,7 +483,7 @@ The response returns standard catalog entries with additional relevance scores, 
     {
       "identifier": "urn:air:example.com:weather-server",
       "displayName": "Global Weather Service",
-      "type": "application/mcp-server+json",
+      "type": "application/mcp-server-card+json",
       "url": "https://weather.example.com/mcp",
       "capabilities": ["WeatherTool"],
       "score": 88,
@@ -494,7 +494,7 @@ The response returns standard catalog entries with additional relevance scores, 
     {
       "identifier": "urn:air:nlweb.ai:registry:public",
       "displayName": "Public Agent Finder",
-      "type": "application/ai-registry",
+      "type": "application/ai-registry+json",
       "url": "https://finder.nlweb.ai/search"
     }
   ],
@@ -558,7 +558,7 @@ Each element of `resultType.facets`:
   "facets": {
     "type": {
       "buckets": [
-        { "value": "application/mcp-server+json", "count": 1247 },
+        { "value": "application/mcp-server-card+json", "count": 1247 },
         { "value": "application/a2a-agent-card+json", "count": 389 }
       ],
       "otherCount": 23
@@ -591,7 +591,7 @@ Deterministic browsing, designed for developer portals. Highly cacheable, relies
 | pageSize | Integer | Max results (default: 20, max: 100). |
 | pageToken | String | Pagination token. |
 
-### 7.3 Protocol Wrappers (Optional)
+### 7.5 Protocol Wrappers (Optional)
 
 While the REST API is mandated as the floor for interoperability, a Registry **MAY** additionally expose its search capability natively via an MCP Tool or an A2A Skill to preserve native orchestrator flows.
 
@@ -636,7 +636,7 @@ This gives the client full control over the federation topology without requirin
   ],
   "referrals": [
     {
-      "identifier": "urn:air:blweb.ai:registry:public",
+      "identifier": "urn:air:nlweb.ai:registry:public",
       "displayName": "Public Agent Finder",
       "type": "application/ai-registry",
       "url": "https://finder.nlweb.ai/search"
@@ -664,7 +664,7 @@ A user asks an orchestrator: “Book me a flight to Tokyo and file the travel ex
 
 ## Appendix A: Filter Expression Syntax
 
-The filter parameter in the Search API uses a simple EBNF-like format for structured constraints.
+The filter parameter in the List API (GET /agents) uses a simple EBNF-like format for structured constraints.
 
 | Filter Field | Type | Description |
 | :---- | :---- | :---- |
@@ -730,7 +730,7 @@ npx ajv-cli validate -s spec/schemas/ai-catalog.schema.json -d path/to/ai-catalo
 
 ### D.3 The Registry REST API Specification (OpenAPI)
 
-The HTTP query interfaces (`POST /search` and `GET /agents`) exposed by compliant Agent Registries are formally defined using the **OpenAPI 3.1.0 Specification** in YAML.
+The HTTP query interfaces (`POST /search`, `POST /explore`, and `GET /agents`) exposed by compliant Agent Registries are formally defined using the **OpenAPI 3.1.0 Specification** in YAML.
 
 * **Authoritative Specification File**: [`spec/schemas/ard.openapi.yaml`](schemas/ard.openapi.yaml)
 * **Key Integration Benefits**:
