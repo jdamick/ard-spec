@@ -199,7 +199,7 @@ urn:air:<publisher>:<namespace>:<agent-name>
 #### Format Structure
 
 * **urn**: Mandatory prefix indicating a Uniform Resource Name.  
-* **ai**: The Namespace Identifier (NID), designating the AI artifact and agent discovery ecosystem.  
+* **air**: The Namespace Identifier (NID), designating the AI artifact and agent discovery ecosystem.  
 * **`<publisher>`**: The Namespace Specific String (NSS) root. MUST be a fully qualified domain name (FQDN) representing the publisher or host organization (e.g., acme.com, github.com). This domain acts as the organizational trust anchor and MUST be verifiable against the cryptographic workload identity in the trustManifest.  
 * **`<namespace>`**: Optional hierarchical segments separated by : (e.g., finance:trading, weather:telemetry). Allows publishers to categorize capabilities by department, team, or product line without altering infrastructure routing.  
 * **`<agent-name>`**: Mandatory terminal segment representing the specific, logical short name of the agent or tool (e.g., assistant, pptx-creator).
