@@ -569,7 +569,7 @@ The ARD entry — its required terms, the value-or-reference rule, and the `trus
 
 * **Authoritative schema**: [`spec/schemas/ard-entry.schema.json`](schemas/ard-entry.schema.json) — defines `ArdEntry` and `ArdManifest` (the `/.well-known/ard.json` document, §5.1).
 * **Base context**: [`spec/schemas/ard.context.jsonld`](schemas/ard.context.jsonld) — the initial expansion context of §4.1, served at `https://agenticresourcediscovery.org/context/v1`.
-* **Structural grammar (CDDL, RFC 8610)**: [`spec/schemas/ard.cddl`](schemas/ard.cddl)
+* **Structural grammar (CDDL, RFC 8610)**: [`spec/schemas/ard.cddl`](schemas/ard.cddl). It restates the entry schema and the OpenAPI payloads, which are authoritative where they disagree.
 
 Note that the schema sets `additionalProperties: true` by design. Terms drawn from namespaces declared in an entry's `@context` (§4.1) are valid and become filter dimensions; a closed schema would defeat the extension mechanism. The `trustManifest` envelope is likewise open — ARD reads only `identity` (§4.5).
 

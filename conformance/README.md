@@ -142,3 +142,12 @@ For strict schema-level checking, install the Python `jsonschema` validator in y
 pip install jsonschema
 ```
 If present, the tool will automatically activate JSON Schema checking alongside its custom semantic validations.
+
+### CDDL checks
+`tests/test_cddl.py` compiles [ard.cddl](../spec/schemas/ard.cddl) and validates every example manifest and the §5.3–5.4 API examples against it. It runs against each CDDL tool it finds and skips when there are none:
+```bash
+gem install cddl      # reference implementation
+cargo install cddl    # Rust implementation
+python3 -m unittest tests.test_cddl
+```
+Both install a binary named `cddl`. The test probes every `cddl` on PATH, `gem environment bindir`, `~/.gem/ruby/*/bin` and `~/.cargo/bin`, so both are found even when one shadows the other; set `CDDL_RB` or `CDDL_RS` to point at an install elsewhere. The two tools disagree on some edge cases, so the grammar is checked against both.

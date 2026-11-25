@@ -180,6 +180,8 @@ components:
         pageSize:
           type: integer
           default: 10
+          minimum: 0
+          maximum: 100
           description: Maximum number of search results to return.
         pageToken:
           type: string
@@ -253,12 +255,13 @@ components:
       type: object
       required:
         - value
-        - count
       properties:
         value:
           type: string
         count:
           type: integer
+          minimum: 0
+          description: Number of matching entries. SHOULD be present; a registry MAY omit it where counts cannot be computed efficiently (§5.3.3).
       additionalProperties: false
 
     SearchResponse:
