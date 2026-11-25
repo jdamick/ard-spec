@@ -13,6 +13,9 @@ Both install a binary named `cddl`, so every `cddl` on PATH is probed, plus the
 default cargo and gem locations, and one shadowing the other is still found.
 
 With neither installed the tests skip, so the zero-dependency suite still passes.
+
+The Ruby tool runs with support/cddl_rb_group_choice.rb loaded, which fixes its crash
+on a group choice inside a named or unwrapped group (gem 0.12.14 only).
 """
 
 import json
@@ -29,6 +32,17 @@ CDDL_FILE = REPO_ROOT / "spec" / "schemas" / "ard.cddl"
 SPEC_FILE = REPO_ROOT / "spec" / "ard.md"
 EXAMPLES = sorted((REPO_ROOT / "conformance" / "examples").glob("**/*.json"))
 VALID_ID = "urn:air:example.com:finance/agent:mcp"
+RUBY_SUPPORT = Path(__file__).resolve().parent / "support"
+
+
+def _run(kind, command, timeout):
+    env = os.environ.copy()
+    if kind == "ruby":
+        # RUBYOPT splits on whitespace, so the patch goes on RUBYLIB by directory and
+        # is required by name, which works from a checkout whose path has a space.
+        env["RUBYLIB"] = os.pathsep.join(p for p in (str(RUBY_SUPPORT), env.get("RUBYLIB", "")) if p)
+        env["RUBYOPT"] = f"{env.get('RUBYOPT', '')} -rcddl_rb_group_choice".strip()
+    return subprocess.run(command, capture_output=True, text=True, timeout=timeout, env=env)
 
 
 def _candidates():
@@ -79,7 +93,7 @@ def _compile(kind, grammar):
             command = [TOOLS[kind], "compile-cddl", "--cddl", str(grammar)]
         else:
             command = [TOOLS[kind], str(grammar), "generate"]
-        result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+        result = _run(kind, command, 60)
         _COMPILED[key] = (result.returncode == 0, result.stdout + result.stderr)
     compiled, output = _COMPILED[key]
     if not compiled:
@@ -87,9 +101,13 @@ def _compile(kind, grammar):
 
 
 def _validate(kind, start, document):
+    return _validate_grammar(kind, _grammar(start), document)
+
+
+def _validate_grammar(kind, text, document):
     with tempfile.TemporaryDirectory() as temp_dir:
         grammar = Path(temp_dir) / "ard.cddl"
-        grammar.write_text(_grammar(start), encoding="utf-8")
+        grammar.write_text(text, encoding="utf-8")
         _compile(kind, grammar)
         instance = Path(temp_dir) / "instance.json"
         instance.write_text(json.dumps(document), encoding="utf-8")
@@ -97,7 +115,7 @@ def _validate(kind, start, document):
             command = [TOOLS[kind], "validate", "--cddl", str(grammar), "--json", str(instance)]
         else:
             command = [TOOLS[kind], str(grammar), "validate", str(instance)]
-        result = subprocess.run(command, capture_output=True, text=True, timeout=30)
+        result = _run(kind, command, 30)
     output = result.stdout + result.stderr
     # The Rust tool exits 0 either way, so both tools are read by their messages.
     if kind == "rust":
@@ -214,6 +232,16 @@ class CddlTests(unittest.TestCase):
             "description": "Travel agents",
         }
         self.assert_valid("registry-referral", referral)
+
+    def test_group_choice_inside_a_named_group(self):
+        # The shape that crashed the unpatched Ruby tool, from its own test_murray.
+        grammar = "start = a\na = { b }\nb = ( (x: int // y: int), z: int )\n"
+        cases = [({"x": 2, "z": 1}, True), ({"y": 1, "z": 2}, True), ({"z": 1}, False), ({}, False)]
+        for kind in TOOLS:
+            for document, expected in cases:
+                with self.subTest(tool=kind, document=document):
+                    valid, output = _validate_grammar(kind, grammar, document)
+                    self.assertEqual(valid, expected, output)
 
     def test_identifier_pattern(self):
         for identifier in ("urn:air:example.com:weather", VALID_ID, "urn:air:example.com:a%2Fb"):
