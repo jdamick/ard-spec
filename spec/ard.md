@@ -298,7 +298,7 @@ In addition to the `query` object (§5.3.1), Search accepts:
 
 The response returns entries with additional relevance scores, plus optional referrals. The `score` parameter denotes semantic relevance ranking (0–100) computed by the search registry, indicating how well the entry satisfies the natural language query. It is strictly an informational relevance metric and MUST NOT be interpreted by orchestrators as a cryptographic trust, compliance, or safety rating. Trust evaluation is fully decoupled and handled independently via the trust manifest (§4.5).
 
-In a response, an entry MUST carry `identifier`; every other term is at the registry's discretion. A registry returns what is useful for selecting among results and MAY omit the rest — `representativeQueries` in particular serve indexing rather than presentation and are normally omitted. A result is therefore not necessarily a complete ARD entry (§4.2); its `identifier` names the authoritative one. Note that `url`, where present, addresses the artifact (an Agent Card, Server Card, and so on) — not the ARD entry that describes it. A normative operation for retrieving a complete entry by `identifier` is out of scope for this draft; a client that needs the full entry obtains it from the source that published it.
+Each result is an AI Catalog [Catalog Entry](https://github.com/Agent-Card/ai-catalog/blob/19208af2f8adbc0a6457e3ff36ce691a304fbd97/specification/ai-catalog.md#catalog-entry) with two ARD members beside its own, `score` and `source`. A result therefore MUST carry what a Catalog Entry requires, `identifier`, `type` and exactly one of `url` or `data`, and MAY carry any other Catalog Entry member and any ARD term (§4.2). Beyond those, a registry returns what is useful for selecting among results and MAY omit the rest; `representativeQueries` serve indexing rather than presentation and are normally omitted. `score` and `source` describe the response, not the resource, so a client that stores or republishes a result as an AI Catalog entry MUST remove them. A result is not necessarily the complete ARD entry (§4.2); its `identifier` names the authoritative one. Note that `url`, where present, addresses the artifact (an Agent Card, Server Card, and so on) — not the ARD entry that describes it. A normative operation for retrieving a complete entry by `identifier` is out of scope for this draft; a client that needs the full entry obtains it from the source that published it.
 
 ```json
 {
@@ -412,6 +412,8 @@ Explore does not federate; it is scoped to the registry queried. Federated disco
 #### 5.3.4 List (GET /agents) — Optional
 
 Deterministic browsing, designed for developer portals. Highly cacheable, relies on strict database filtering, and does not support relevance-based sorting.
+
+Each item in `items` is an AI Catalog Catalog Entry, so it MUST carry `identifier`, `type` and exactly one of `url` or `data`, and MAY carry any other Catalog Entry member and any ARD term (§4.2), as a Search result does (§5.3.2). A List item SHOULD NOT carry `score` or `source`, since List has no relevance ranking.
 
 **Parameters:**
 
@@ -569,7 +571,7 @@ The ARD entry — its required terms, the value-or-reference rule, and the `trus
 
 * **Authoritative schema**: [`spec/schemas/ard-entry.schema.json`](schemas/ard-entry.schema.json) — defines `ArdEntry` and `ArdManifest` (the `/.well-known/ard.json` document, §5.1).
 * **Base context**: [`spec/schemas/ard.context.jsonld`](schemas/ard.context.jsonld) — the initial expansion context of §4.1, served at `https://agenticresourcediscovery.org/context/v1`.
-* **Structural grammar (CDDL, RFC 8610)**: [`spec/schemas/ard.cddl`](schemas/ard.cddl). It restates the entry schema and the OpenAPI payloads, which are authoritative where they disagree.
+* **Structural grammar (CDDL, RFC 8610)**: [`spec/schemas/ard.cddl`](schemas/ard.cddl). It restates the entry schema and the OpenAPI payloads, which are authoritative where they disagree. Its Search and List results unwrap AI Catalog's `CatalogEntry`, defined in [`spec/schemas/ai-catalog.cddl`](schemas/ai-catalog.cddl), a pinned copy of AI Catalog's CDDL; validate registry payloads against both files. AI Catalog types `updatedAt` as `tdate`, which RFC 8610 defines as CBOR tag 0, so when validating JSON read `tdate` as `tstr`, as `conformance/tests/test_cddl.py` does.
 
 Note that the schema sets `additionalProperties: true` by design. Terms drawn from namespaces declared in an entry's `@context` (§4.1) are valid and become filter dimensions; a closed schema would defeat the extension mechanism. The `trustManifest` envelope is likewise open — ARD reads only `identity` (§4.5).
 

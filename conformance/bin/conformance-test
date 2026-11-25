@@ -435,6 +435,27 @@ class ConformanceTester:
             f"No manifest found at /.well-known/ard.json ({ard_err}) or /.well-known/ai-catalog.json ({legacy_err}).")
         return None, None
 
+    def check_catalog_entry(self, label, item):
+        """A Search result or List item carries what an AI Catalog Catalog Entry requires (§5.3.2)."""
+        if not isinstance(item, dict):
+            self.add_error(f"[{label}] Must be a JSON object.")
+            return
+        for term in ("identifier", "type"):
+            value = item.get(term)
+            if value is None or value == "":
+                self.add_error(f"[{label}] Missing '{term}', which an AI Catalog Catalog Entry requires (§5.3.2).")
+            elif not isinstance(value, str):
+                self.add_error(f"[{label}] '{term}' must be a string (§5.3.2).")
+        # Presence is by key, as in the OpenAPI schema, so a null 'url' still counts as carried.
+        has_url, has_data = "url" in item, "data" in item
+        if has_url == has_data:
+            which = "both" if has_url else "neither"
+            self.add_error(f"[{label}] Carries {which} of 'url' and 'data'; a Catalog Entry carries exactly one (§4.3, §5.3.2).")
+        elif has_url and not (isinstance(item["url"], str) and item["url"]):
+            self.add_error(f"[{label}] 'url' must be a non-empty string (§4.3).")
+        elif has_data and not isinstance(item["data"], dict):
+            self.add_error(f"[{label}] 'data' must be a JSON object (§4.3).")
+
     def validate_registry(self, registry_base_url, request_headers=None):
         print_header(f"Validating Agent Registry: {registry_base_url}")
         base_url = registry_base_url.rstrip('/')
@@ -453,8 +474,15 @@ class ConformanceTester:
                     # Check schema conformance
                     if not isinstance(data, dict) or "items" not in data:
                         self.add_error("GET /agents response is not a valid paginated object. Missing 'items' array.")
+                    elif not isinstance(data["items"], list):
+                        self.add_error("GET /agents response 'items' is not a JSON array.")
                     else:
-                        print_success(f"GET /agents response contains valid 'items' list ({len(data.get('items', []))} items).")
+                        print_success(f"GET /agents response contains valid 'items' list ({len(data['items'])} items).")
+                        # Each item is an AI Catalog Catalog Entry (§5.3.4).
+                        for idx, item in enumerate(data["items"]):
+                            self.check_catalog_entry(f"Item #{idx}", item)
+                            if isinstance(item, dict) and ("score" in item or "source" in item):
+                                self.add_warning(f"[Item #{idx}] Carries 'score' or 'source'; a List item SHOULD NOT, since List has no relevance ranking (§5.3.4).")
                 else:
                     self.add_warning(f"GET /agents returned unexpected status: {response.status}")
         except urllib.error.HTTPError as e:
@@ -518,16 +546,8 @@ class ConformanceTester:
                             if not source:
                                 self.add_error(f"[{label}] Missing required SearchResultItem field 'source'.")
                                 
-                            # In a response, only 'identifier' is required (§5.3.2).
-                            # A registry MAY omit any other term; 'identifier' names
-                            # the authoritative entry.
-                            ident = item.get("identifier")
-                            if not ident:
-                                self.add_error(f"[{label}] Result is missing required 'identifier'.")
-
-                            for optional_term in ("displayName", "type"):
-                                if not item.get(optional_term):
-                                    print_bullet(f"[{label}] Omits '{optional_term}' (permitted; results carry only what selection needs).")
+                            # A result is an AI Catalog Catalog Entry plus score and source (§5.3.2).
+                            self.check_catalog_entry(label, item)
                 else:
                     self.add_error(f"POST /search returned unexpected HTTP status: {response.status}")
         except urllib.error.HTTPError as e:

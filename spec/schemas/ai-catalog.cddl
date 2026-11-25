@@ -1,0 +1,107 @@
+; AI Catalog CDDL, copied unchanged from the "CDDL Schema" section of
+; https://github.com/Agent-Card/ai-catalog/blob/19208af2f8adbc0a6457e3ff36ce691a304fbd97/specification/ai-catalog.md
+; (AI Catalog v0.9, the 1.0 release candidate). Only these comment lines are added.
+;
+; Copyright the AI Catalog contributors, licensed under CC BY 4.0
+; (https://creativecommons.org/licenses/by/4.0/). ARD's search and list results
+; are AI Catalog CatalogEntry maps (ard.cddl, ADR-0013); validate ARD payloads
+; against ard.cddl and this file together.
+;
+; To update: copy the three code blocks of that section, in order, and change the
+; commit above. This file defines no start rule.
+
+AICatalog = {
+  specVersion: text,
+  ? host: HostInfo,
+  entries: [* CatalogEntry],
+  ? signature: Signature,
+  ? additionalSignatures: any,
+  ? extensions: { * text => any },
+  * text => any
+}
+
+HostInfo = {
+  displayName: text,
+  ? identifier: text,
+  ? documentationUrl: text,
+  ? logoUrl: text,
+  * text => any
+}
+
+CatalogEntry = {
+  identifier: text,
+  ? displayName: text,
+  type: text,
+  (url: text // data: any),
+  ? version: text,
+  ? description: text,
+  ? tags: [* text],
+  ? publisher: Publisher,
+  ? digest: text,
+  ? trustManifests: [* TrustManifest],
+  ? updatedAt: tdate,
+  ? extensions: { * text => any },
+  * text => any
+}
+
+Publisher = {
+  identifier: text,
+  displayName: text,
+  ? identityType: text,
+  * text => any
+}
+
+TrustManifest = {
+  contributor: text,
+  ? subject: Subject,
+  ? signature: Signature,
+  ? additionalSignatures: any,
+  ? trustSchema: TrustSchema,
+  ? attestations: [* Attestation],
+  ? provenance: [* ProvenanceLink],
+  ? extensions: { * text => any }
+}
+
+Subject = {
+  identifier: text,
+  type: text,
+  digest: text,
+  ? version: text
+}
+
+Signature = {
+  signer: text,
+  profile: text,
+  issuedAt: tdate,
+  ? expiresAt: tdate,
+  jws: text
+}
+
+TrustSchema = {
+  identifier: text,
+  version: text,
+  ? governanceUri: text,
+  ? verificationMethods: [* text]
+}
+
+Attestation = {
+  type: text,
+  uri: text,
+  ? digest: text,
+  ? size: uint,
+  ? description: text
+}
+
+ProvenanceLink = {
+  relation: text,
+  sourceId: text,
+  ? sourceDigest: text,
+  ? registryUri: text,
+  ? statementUri: text,
+  ? signatureRef: text
+}
+
+PolicyUrls = {
+  ? privacyPolicyUrl: text,
+  ? termsOfServiceUrl: text
+}

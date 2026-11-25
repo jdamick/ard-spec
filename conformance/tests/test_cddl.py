@@ -29,6 +29,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CDDL_FILE = REPO_ROOT / "spec" / "schemas" / "ard.cddl"
+AI_CATALOG_CDDL = REPO_ROOT / "spec" / "schemas" / "ai-catalog.cddl"
+
+# The Rust tool rejects every map built with ~ (anweiss/cddl #65 behaviour, still on
+# main at 3471fdc), so rules whose maps unwrap CatalogEntry are checked by the Ruby
+# tool only.
+UNWRAP_RULES = {"search-response", "search-result-item", "list-response", "list-item"}
 SPEC_FILE = REPO_ROOT / "spec" / "ard.md"
 EXAMPLES = sorted((REPO_ROOT / "conformance" / "examples").glob("**/*.json"))
 VALID_ID = "urn:air:example.com:finance/agent:mcp"
@@ -79,7 +85,12 @@ TOOLS = _find_tools()
 
 def _grammar(start):
     text = CDDL_FILE.read_text(encoding="utf-8")
-    return re.sub(r"^start = .*$", f"start = {start}", text, count=1, flags=re.M)
+    text = re.sub(r"^start = .*$", f"start = {start}", text, count=1, flags=re.M)
+    # AI Catalog types updatedAt as tdate, which RFC 8610 defines as CBOR tag 0 around
+    # a string. JSON has no tags, so for the JSON instances checked here a tdate is its
+    # string; the Ruby tool otherwise rejects every JSON updatedAt.
+    catalog = re.sub(r"\btdate\b", "tstr", AI_CATALOG_CDDL.read_text(encoding="utf-8"))
+    return text + "\n" + catalog
 
 
 _COMPILED = {}
@@ -158,17 +169,22 @@ def _api_examples():
 
 @unittest.skipUnless(TOOLS, "no CDDL tool installed (gem install cddl, or cargo install cddl)")
 class CddlTests(unittest.TestCase):
+    def _kinds(self, start, tools=None):
+        kinds = [kind for kind in (tools or TOOLS) if kind in TOOLS]
+        if start in UNWRAP_RULES:
+            kinds = [kind for kind in kinds if kind != "rust"]
+        if not kinds:
+            self.skipTest(f"no installed cddl tool can check {start} (found {', '.join(sorted(TOOLS))})")
+        return kinds
+
     def assert_valid(self, start, document):
-        for kind in TOOLS:
+        for kind in self._kinds(start):
             with self.subTest(tool=kind):
                 valid, output = _validate(kind, start, document)
                 self.assertTrue(valid, output)
 
     def assert_invalid(self, start, document, tools=None):
-        kinds = [kind for kind in (tools or TOOLS) if kind in TOOLS]
-        if not kinds:
-            self.skipTest(f"needs the {', '.join(tools)} cddl tool, found {', '.join(sorted(TOOLS))}")
-        for kind in kinds:
+        for kind in self._kinds(start, tools):
             with self.subTest(tool=kind):
                 valid, output = _validate(kind, start, document)
                 self.assertFalse(valid, output)
@@ -242,6 +258,29 @@ class CddlTests(unittest.TestCase):
                 with self.subTest(tool=kind, document=document):
                     valid, output = _validate_grammar(kind, grammar, document)
                     self.assertEqual(valid, expected, output)
+
+    def test_result_is_a_complete_catalog_entry(self):
+        result = dict(_entry(), score=95, source="https://registry.example/")
+        self.assert_valid("search-result-item", result)
+        self.assert_valid("search-result-item", dict(result, updatedAt="2026-03-15T10:00:00Z", version="1.0.0"))
+        inline = {k: v for k, v in result.items() if k != "url"}
+        self.assert_valid("search-result-item", dict(inline, data={"name": "inline"}))
+        self.assert_invalid("search-result-item", {"identifier": VALID_ID, "score": 95, "source": "https://r/"})
+        self.assert_invalid("search-result-item", inline)
+        # CatalogEntry's wildcard admits the second member; OpenAPI's oneOf rejects it.
+        self.assert_valid("search-result-item", dict(result, data={"name": "inline"}))
+        self.assert_invalid("search-result-item", dict(result, score="high"))
+        self.assert_invalid("search-result-item", {k: v for k, v in result.items() if k != "source"})
+
+    def test_result_types_ard_terms(self):
+        result = dict(_entry(), score=95, source="https://registry.example/")
+        self.assert_valid("search-result-item", dict(result, capabilities=["WeatherTool"], **{"okf:taxonomy": "x"}))
+        self.assert_invalid("search-result-item", dict(result, capabilities="WeatherTool"))
+        self.assert_invalid("search-result-item", dict(result, trustManifest={"attestations": []}))
+
+    def test_list_items_are_catalog_entries(self):
+        self.assert_valid("list-response", {"items": [_entry(), _entry(version="2.0.0")], "total": 2})
+        self.assert_invalid("list-response", {"items": [{"identifier": VALID_ID}]})
 
     def test_identifier_pattern(self):
         for identifier in ("urn:air:example.com:weather", VALID_ID, "urn:air:example.com:a%2Fb"):

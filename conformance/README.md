@@ -112,13 +112,13 @@ When checking a live Agent Registry server, the tool executes the following prob
 
 * **GET `/agents` (Optional Listing Probe)**:
   * Contacts the GET endpoint to check if the registry supports deterministic browsing.
-  * If supported (returns `200 OK`), it validates that the response contains the paginated `"items"` structure.
+  * If supported (returns `200 OK`), it validates that the response contains the paginated `"items"` structure, and that each item is an AI Catalog Catalog Entry: `identifier`, `type`, and exactly one of `url` or `data` (§5.3.4).
   * If not supported (returns `404` or `501`), it marks this as compliant since deterministic listing is optional.
 * **POST `/search` (Mandated Search Probe)**:
   * Probes the search route which is required for dynamic semantic capability discovery.
   * Sends a mock natural-language query payload with required `query` string and optional `filter` / `limit` parameters.
   * Verifies a `200 OK` response structure containing a `"results"` array.
-  * Validates each result per §5.3.2: only `identifier` is required, since a registry MAY return just what selection needs. Omitted terms are reported, not failed.
+  * Validates each result per §5.3.2: an AI Catalog Catalog Entry, so `identifier`, `type`, and exactly one of `url` or `data`, plus `score` (0–100) and `source`. Any other term MAY be omitted.
 * **POST `/explore` (Optional Introspection Probe)**:
   * Probes the dynamic introspection route for facet and bucketing generation.
   * Sends a mock request requesting facet counts grouped by `type`.

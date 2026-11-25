@@ -6,6 +6,12 @@
 ; consumers. Where they disagree, the JSON Schema and the OpenAPI document are
 ; authoritative.
 ;
+; Search and List results are AI Catalog CatalogEntry maps (§5.3.2, ADR-0013),
+; defined in spec/schemas/ai-catalog.cddl, a pinned copy of AI Catalog's CDDL.
+; Validate a registry payload against this file and that one together. That file
+; types updatedAt as tdate, CBOR tag 0 in RFC 8610, which JSON can't carry, so when
+; validating JSON read tdate as tstr, as conformance/tests/test_cddl.py does.
+;
 ; Keys that are also names in the RFC 8610 prelude ("text", "uri") are quoted, so
 ; no tool can read them as a type and match any key. The prelude's `any` and
 ; `null` are used as defined there and are not redefined.
@@ -164,22 +170,35 @@ search-response = {
   ? pageToken: tstr
 }
 
+; A result is an AI Catalog CatalogEntry with ARD's two result members alongside
+; it (§5.3.2). ~ pulls CatalogEntry's members into this map, so a result carries
+; identifier, type and url or data. CatalogEntry's trailing wildcard also admits
+; a map with both, so only the OpenAPI document and the conformance tool reject it.
+; ARD's own terms are typed here; any other member passes CatalogEntry's wildcard.
+; `data` takes CatalogEntry's type, any, where ARD's OpenAPI document requires an
+; object; the OpenAPI document is authoritative.
+
 search-result-item = {
-  result-entry-fields,
   score: 0..100, ; Semantic relevance score
-  source: tstr,  ; Registry base URL
-  * tstr => any
+  source: tstr,  ; The registry the entry was indexed by
+  ard-result-terms,
+  ~CatalogEntry
 }
 
-result-entry = { result-entry-fields, * tstr => any }
+list-item = {
+  ard-result-terms,
+  ~CatalogEntry
+}
 
-result-entry-fields = (
-  identifier: tstr,
-  ? displayName: tstr,
-  ? type: tstr,
-  ? url: tstr,
-  ? data: {* tstr => any},
-  ard-entry-descriptive
+; The ARD terms AI Catalog doesn't define. CatalogEntry types description, tags,
+; version and updatedAt itself.
+ard-result-terms = (
+  ? "@context" ^ => json-ld-context,
+  ? "@id" ^ => tstr,
+  ? capabilities: [* tstr],
+  ? representativeQueries: [* tstr],
+  ? metadata: {* tstr => (tstr / int / float / bool / null)},
+  ? trustManifest: trust-manifest
 )
 
 registry-referral = {
@@ -190,11 +209,8 @@ registry-referral = {
   * tstr => any
 }
 
-; In search and list results a registry returns the terms useful for selecting
-; among results and MAY omit any other; only `identifier` is required.
-
 list-response = {
-  items: [* result-entry],
+  items: [* list-item],
   ? total: uint,
   ? pageToken: tstr
 }

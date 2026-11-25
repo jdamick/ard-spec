@@ -287,11 +287,19 @@ components:
       allOf:
         - $ref: './ard-entry.schema.json#/$defs/EntryFields'
       type: object
-      description: "An entry as returned in search results. A registry returns the terms useful for selecting among results and MAY omit any other; only `identifier` is required."
+      description: "An AI Catalog Catalog Entry with ARD's `score` and `source` beside it (§5.3.2). It carries what a Catalog Entry requires, `identifier`, `type` and exactly one of `url` or `data`; a registry MAY omit any other term."
       required:
         - identifier
+        - type
         - score
         - source
+      oneOf:
+        - required: [url]
+          not:
+            required: [data]
+        - required: [data]
+          not:
+            required: [url]
       properties:
         score:
           type: integer
@@ -338,11 +346,20 @@ components:
       properties:
         items:
           type: array
+          description: AI Catalog Catalog Entries, one per version of an identifier (§5.3.4).
           items:
             allOf:
               - $ref: './ard-entry.schema.json#/$defs/EntryFields'
             required:
               - identifier
+              - type
+            oneOf:
+              - required: [url]
+                not:
+                  required: [data]
+              - required: [data]
+                not:
+                  required: [url]
         total:
           type: integer
           description: Total count of matching entries in the registry.
